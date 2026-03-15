@@ -1,8 +1,19 @@
-# Custom Stream Implementation
+<h1 align="center">Custom Stream Implementation</h1>
 
-A from-scratch implementation of Java's Stream API concept. Demonstrates how lazy evaluation pipelines work internally.
+<p align="center">
+  A from-scratch implementation of Java's Stream API — demonstrating how lazy evaluation pipelines work internally.
+</p>
 
-## Usage
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-17%2B-blue?logo=openjdk&logoColor=white" alt="Java 17+">
+  <img src="https://img.shields.io/badge/Maven-3.6%2B-C71A36?logo=apachemaven&logoColor=white" alt="Maven 3.6+">
+  <img src="https://img.shields.io/badge/Tests-28%20passing-brightgreen?logo=junit5&logoColor=white" alt="Tests 28 passing">
+  <img src="https://img.shields.io/badge/License-Apache%202.0-yellow?logo=apache&logoColor=white" alt="License Apache 2.0">
+</p>
+
+---
+
+## Quick Start
 
 ```java
 List<String> result = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
@@ -31,7 +42,9 @@ List<String> result = Stream.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 **Intermediate** operations are lazy — they record *what* to do but execute nothing.
 **Terminal** operations trigger the entire pipeline, pushing data from source to result.
 
-## Architecture: Chain of Pipeline Objects
+## Architecture
+
+### Chain of Pipeline Objects
 
 The stream is designed as a **chain of pipeline objects**. Each intermediate operation
 creates a new `OperationalPipeline` that wraps an `IntermediateOperation` object, forming a linked chain from
@@ -153,6 +166,99 @@ HeadPipeline                OperationalPipeline           OperationalPipeline
 When `toList()` calls the last stage's operation, it triggers a
 cascade back to the source.
 
+## Design Patterns
+
+This implementation combines several well-known design patterns to create a flexible, composable stream processing system.
+
+### Pipeline Pattern
+
+> Core architectural pattern — data flows through a linear sequence of processing stages.
+
+Each intermediate operation forms a stage in the pipeline. Data is pushed through each
+stage via the `UpstreamSource` -> `DownstreamSource` mechanism. The pipeline is built lazily
+during method chaining, with actual execution triggered only by terminal operations.
+
+```
+Source ──> Filter ──> Map ──> Peek ──> Limit ──> Terminal
+  │          │         │       │        │           │
+  │   IntermediateOperation  chain     │     TerminalOperation
+  │          (lazy, recorded only)     │     (triggers execution)
+  HeadPipeline                    OperationalPipeline stages
+```
+
+### Decorator Pattern
+
+> Each intermediate call wraps the previous pipeline with a new `OperationalPipeline`.
+
+```java
+// Each call decorates the previous stage:
+Stream.of(1, 2, 3)              // HeadPipeline
+      .filter(n -> n > 1)       // OperationalPipeline wrapping HeadPipeline
+      .map(n -> n * 2)          // OperationalPipeline wrapping the filter stage
+```
+
+Stages accumulate layer by layer. Each new layer adds behavior while delegating to
+the previous operation via `UpstreamSource`.
+
+### Strategy Pattern
+
+> Operations are interchangeable implementations of `IntermediateOperation` or `TerminalOperation`.
+
+| Interface                  | Strategies (concrete implementations)                                  |
+|----------------------------|------------------------------------------------------------------------|
+| `IntermediateOperation<T>` | `FilterOperation`, `MapOperation`, `PeekOperation`, `LimitOperation`   |
+| `TerminalOperation<T, R>`  | `ToListOperation`, `CountOperation`                                    |
+
+Each encapsulates a different processing algorithm that can be plugged into the same pipeline framework.
+
+### Factory Method Pattern
+
+> `Stream.of()` and intermediate methods act as factories for pipeline stages.
+
+- `Stream.of(T... elements)` creates a `HeadPipeline` (entry point)
+- `.filter()`, `.map()`, `.peek()`, `.limit()` each create new `OperationalPipeline` instances
+
+### Fluent Interface
+
+> Method chaining enables a natural, readable API.
+
+```java
+Stream.of(1, 2, 3).filter(n -> n > 1).map(n -> n * 2).toList();
+```
+
+Each intermediate method returns `Stream<T>`, allowing continued chaining until a
+terminal operation finalizes the result.
+
+### Chain of Responsibility
+
+> Each operation holds a reference to the previous stage via `UpstreamSource`.
+
+When executed, the chain is traversed backward through these references. Each operation
+processes elements and decides whether to forward them downstream (e.g., `FilterOperation`
+may reject an element, breaking the chain for that element).
+
+### Lazy Evaluation
+
+> Intermediate operations record *what* to do — they execute nothing until a terminal triggers the pipeline.
+
+```java
+// These three lines execute ZERO processing:
+Stream<Integer> stream = Stream.of(1, 2, 3)
+        .filter(n -> n > 1)
+        .map(n -> n * 2);
+
+// Only THIS triggers the entire pipeline:
+List<Integer> result = stream.toList();
+```
+
+### Control Flow Exception
+
+> `ShortCircuitException` enables non-local jump from a downstream operation back to the source.
+
+`LimitOperation` throws it after forwarding enough elements. `HeadOperation` catches it
+and stops iterating. The exception overrides `fillInStackTrace()` to avoid any
+stack-capture overhead — it's used purely as a control signal, not for error reporting.
+
 ## Project Structure
 
 ```
@@ -213,3 +319,7 @@ mvn test
 ```
 
 Runs 28 tests covering all operations and their combinations.
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
