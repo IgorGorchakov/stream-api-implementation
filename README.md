@@ -1,4 +1,6 @@
-<h1 align="center">Stream API Implementation</h1>
+<p align="center">
+  <img src="https://svg-banners.vercel.app/api?type=luminance&text1=Stream%20API%20Implementation&width=800&height=400" alt="Stream API Implementation">
+</p>
 
 <p align="center">
   A from-scratch implementation of Java's Stream API — demonstrating how lazy evaluation pipelines work internally.
