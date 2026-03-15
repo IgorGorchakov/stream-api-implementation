@@ -1,14 +1,5 @@
 # Custom Stream Implementation
 
-The real Java Stream uses a linked pipeline of AbstractPipeline stages (ReferencePipeline), where each stage holds a reference to the previous stage and wraps behavior via `Sink` chaining. It's the stage-based approach.
-
-#### Real Java Stream internals:
-- Uses a linked pipeline of stages — AbstractPipeline → ReferencePipeline with subclasses like Head, StatelessOp, etc.
-- Each intermediate operation creates a new stage object that points back to the previous stage (linked list, not a flat list)
-- Each stage knows its upstream reference
-- At terminal time, it walks the chain backwards and builds a Sink pipeline (similar to DownstreamSource wrapping)
-- The Head stage holds the source data — just like HeadPipeline
-
 A from-scratch implementation of Java's Stream API concept, built without using `java.util.stream`
 or `java.util.function`. Demonstrates how lazy evaluation pipelines work internally.
 
