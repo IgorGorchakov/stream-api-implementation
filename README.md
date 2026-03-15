@@ -1,4 +1,4 @@
-<h1 align="center">Custom Stream Implementation</h1>
+<h1 align="center">Stream API Implementation</h1>
 
 <p align="center">
   A from-scratch implementation of Java's Stream API — demonstrating how lazy evaluation pipelines work internally.
