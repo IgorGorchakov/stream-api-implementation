@@ -1,7 +1,6 @@
 # Custom Stream Implementation
 
-A from-scratch implementation of Java's Stream API concept, built without using `java.util.stream`
-or `java.util.function`. Demonstrates how lazy evaluation pipelines work internally.
+A from-scratch implementation of Java's Stream API concept. Demonstrates how lazy evaluation pipelines work internally.
 
 ## Usage
 
