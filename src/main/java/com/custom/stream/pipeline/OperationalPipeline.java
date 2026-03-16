@@ -29,51 +29,51 @@ import java.util.List;
  * @param <T> the element type of this pipeline stage
  */
 public class OperationalPipeline<T> implements Stream<T> {
-    protected final IntermediateOperation<T> previousIntermediateOperation;
+    protected final IntermediateOperation<T> intermediateOperation;
 
-    public OperationalPipeline(IntermediateOperation<T> previousIntermediateOperation) {
-        this.previousIntermediateOperation = previousIntermediateOperation;
+    public OperationalPipeline(IntermediateOperation<T> intermediateOperation) {
+        this.intermediateOperation = intermediateOperation;
     }
 
     @Override
     public Stream<T> filter(FilterPredicate<T> filterPredicate) {
-        UpstreamSource<T> upstreamSource = previousIntermediateOperation::operate;
-        IntermediateOperation<T> currentIntermediateOperation = new FilterOperation<>(upstreamSource, filterPredicate);
-        return new OperationalPipeline<>(currentIntermediateOperation);
+        UpstreamSource<T> upstreamSource = intermediateOperation::operate;
+        IntermediateOperation<T> newIntermediateOperation = new FilterOperation<>(upstreamSource, filterPredicate);
+        return new OperationalPipeline<>(newIntermediateOperation);
     }
 
     @Override
     public <R> Stream<R> map(MapperPredicate<T, R> mapperPredicate) {
-        UpstreamSource<T> upstreamSource = previousIntermediateOperation::operate;
-        IntermediateOperation<R> currentIntermediateOperation = new MapOperation<>(upstreamSource, mapperPredicate);
-        return new OperationalPipeline<>(currentIntermediateOperation);
+        UpstreamSource<T> upstreamSource = intermediateOperation::operate;
+        IntermediateOperation<R> newIntermediateOperation = new MapOperation<>(upstreamSource, mapperPredicate);
+        return new OperationalPipeline<>(newIntermediateOperation);
     }
 
     @Override
     public Stream<T> peek(PeekPredicate<T> peekPredicate) {
-        UpstreamSource<T> upstreamSource = previousIntermediateOperation::operate;
-        IntermediateOperation<T> currentIntermediateOperation = new PeekOperation<>(upstreamSource, peekPredicate);
-        return new OperationalPipeline<>(currentIntermediateOperation);
+        UpstreamSource<T> upstreamSource = intermediateOperation::operate;
+        IntermediateOperation<T> newIntermediateOperation = new PeekOperation<>(upstreamSource, peekPredicate);
+        return new OperationalPipeline<>(newIntermediateOperation);
     }
 
     @Override
     public Stream<T> limit(long maxSize) {
-        UpstreamSource<T> upstreamSource = previousIntermediateOperation::operate;
-        IntermediateOperation<T> currentIntermediateOperation = new LimitOperation<>(upstreamSource, maxSize);
-        return new OperationalPipeline<>(currentIntermediateOperation);
+        UpstreamSource<T> upstreamSource = intermediateOperation::operate;
+        IntermediateOperation<T> newIntermediateOperation = new LimitOperation<>(upstreamSource, maxSize);
+        return new OperationalPipeline<>(newIntermediateOperation);
     }
 
     @Override
     public List<T> toList() {
-        TerminalOperation<T, List<T>> actualTerminalOperation = new ToListOperation<>();
-        UpstreamSource<T> upstreamSource = previousIntermediateOperation::operate;
-        return actualTerminalOperation.operate(upstreamSource);
+        UpstreamSource<T> upstreamSource = intermediateOperation::operate;
+        TerminalOperation<T, List<T>> newTerminalOperation = new ToListOperation<>();
+        return newTerminalOperation.operate(upstreamSource);
     }
 
     @Override
     public long count() {
-        TerminalOperation<T, Long> actualTerminalOperation = new CountOperation<>();
-        UpstreamSource<T> upstreamSource = previousIntermediateOperation::operate;
-        return actualTerminalOperation.operate(upstreamSource);
+        UpstreamSource<T> upstreamSource = intermediateOperation::operate;
+        TerminalOperation<T, Long> newTerminalOperation = new CountOperation<>();
+        return newTerminalOperation.operate(upstreamSource);
     }
 }
